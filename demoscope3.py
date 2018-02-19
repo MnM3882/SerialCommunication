@@ -21,16 +21,18 @@ plt.ion()
 
 ser.isOpen()
 
-while 1:
+while True:
 	
-	bsync = ser.read(size=1)
-	bsync = int.from_bytes(bsync, sys.byteorder)
+	while (ser.in_waiting() == 0):
+		pass
+
+	b = ser.read(size=5)
+	bsync = b[0]
 	if bsync == 255:
-		b = ser.read(size=4)
-		b1i = b[0]
-		b2i = b[1]
-		b3i = b[2]
-		b4i = b[3]
+		b1i = b[1]
+		b2i = b[2]
+		b3i = b[3]
+		b4i = b[4]
 	
 
 		#par1 = b1i >> 7
@@ -42,8 +44,8 @@ while 1:
 		d1 = (b1i & 0x20) >> 5
 		d2 = (b3i & 0x20) >> 5
 
-		bi = (((b1i & 0x1F) << 7) + (b2i & 0x7F))/4095
-		bj = (((b3i & 0x1F) << 7) + (b4i & 0x7F))/4095
+		bi = 3*(((b1i & 0x1F) << 7) + (b2i & 0x7F))/4095
+		bj = 3*(((b3i & 0x1F) << 7) + (b4i & 0x7F))/4095
 
 		x = np.delete(x,0)
 		x = np.append(x,bi)
@@ -57,7 +59,7 @@ while 1:
 			print('Anag2: '+"%.4f"%bj+' Dig2: '+str(d2))#+' Dig4: '+str(d4)+' Par3: '+str(par3)+' Par4: '+str(par4))
 		
 			plt.clf()
-			plt.axis([0, 0.5, 0, 1])
+			plt.axis([0, 0.5, 0, 3])
 			plt.plot(t, x, c='b')
 			plt.plot(t, y, c='r')
 			plt.pause(0.00001)
