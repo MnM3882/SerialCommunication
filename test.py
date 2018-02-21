@@ -4,62 +4,32 @@ from tkinter import *
 master = Tk()
 
 def buttonfunction(index):
-	for i in range(2):
+	for i in range(3):
 		buttons[i].config(state="disabled")
 	if index == 0:
 		demoscope3.scope()
 	elif index == 1:
+		demoscope3.storedata()
+	elif index == 2:
 		exit()
-	for i in range(2):
+	for i in range(3):
 		buttons[i].config(state="active")
 	
 
-button_names = ['Plotear en tiempo real', 'Salir']
+button_names = ['Plotear en tiempo real', 'Adquirir y almacenar', 'Salir']
 
 buttons = []
 
-for index in range(2): 
+for index in range(3): 
     n=button_names[index]
 
     button = Button(master, bg="White", text=n, relief=GROOVE,
                     command=lambda index=index, n=n: buttonfunction(index))
 
     # Add the button to the window
-    button.grid(padx=2, pady=2, row=index%3, column=int(index/3))
+    button.grid(padx=2, pady=2, row=index%3, column=0)
 
     # Add a reference to the button to 'buttons'
     buttons.append(button)
 
 mainloop()
-
-'''
-from tkinter import Tk, Button, GROOVE
-
-root = Tk()
-
-def appear(index, letter):
-    # This line would be where you insert the letter in the textbox
-    print(letter)
-
-    # Disable the button by index
-    buttons[index].config(state="disabled")
-
-letters=["A", "T", "D", "M", "E", "A", "S", "R", "M"]
-
-# A collection (list) to hold the references to the buttons created below
-buttons = []
-
-for index in range(9): 
-    n=letters[index]
-
-    button = Button(root, bg="White", text=n, width=5, height=1, relief=GROOVE,
-                    command=lambda index=index, n=n: appear(index, n))
-
-    # Add the button to the window
-    button.grid(padx=2, pady=2, row=index%3, column=int(index/3))
-
-    # Add a reference to the button to 'buttons'
-    buttons.append(button)
-
-root.mainloop()
-'''
