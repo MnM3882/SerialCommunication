@@ -39,10 +39,11 @@ def scope():
 
 		fig = plt.figure()
 		ax = fig.add_subplot(1,1,1)
-		ax.axis([0, 0.5, 0, 5])
+		ax.axis([0, 0.5, 0, 4095])
 		ax.set_title('Senales analogicas en tiempo real')
 		lines1, = ax.plot(t, x, c='b', alpha = 0.7)
 		lines2, = ax.plot(t, y, c='r', alpha = 0.7)
+		ax.legend([lines1,lines2],['Canal 1','Canal 2'])
 		
 		#cid = lines1.figure.canvas.mpl_connect('button_press_event', stopevent)
 		#cid = lines2.figure.canvas.mpl_connect('button_press_event', stopevent)
@@ -73,8 +74,8 @@ def scope():
 				d1 = (b1i & 0x20) >> 5
 				d2 = (b3i & 0x20) >> 5
 
-				bi = (((b1i & 0x1F) << 7) + (b2i & 0x7F))/819
-				bj = (((b3i & 0x1F) << 7) + (b4i & 0x7F))/819
+				bi = (((b1i & 0x1F) << 7) + (b2i & 0x7F))#/819
+				bj = (((b3i & 0x1F) << 7) + (b4i & 0x7F))#/819
 
 				x = np.delete(x,0)
 				x = np.append(x,bi)
@@ -110,7 +111,7 @@ def scope():
 	plt.close()
 	stopsignal = False
 
-def storedata():
+def storedata(adqtime):
 	# configure the serial connections (the parameters differs on the device you are connecting to)
 	ser = serial.Serial(
 	    port='/dev/ttyUSB0',#'/dev/ttyACM0',
@@ -135,7 +136,7 @@ def storedata():
 		
 		with open("anag1.csv", 'w') as fx, open("anag2.csv", 'w') as fy, open("dig1.csv", 'w') as fd1, open("dig2.csv", 'w') as fd2, open("error_report.txt", 'w') as fe:
 
-			for i in range(1000):
+			for i in range(1000*adqtime):
 	
 				b = ser.read(size=4)
 		
@@ -148,8 +149,8 @@ def storedata():
 					d1 = (b1i & 0x20) >> 5
 					d2 = (b3i & 0x20) >> 5
 
-					bi = (((b1i & 0x1F) << 7) + (b2i & 0x7F))/819
-					bj = (((b3i & 0x1F) << 7) + (b4i & 0x7F))/819
+					bi = (((b1i & 0x1F) << 7) + (b2i & 0x7F))#/819
+					bj = (((b3i & 0x1F) << 7) + (b4i & 0x7F))#/819
 
 					fx.write("%f\n"%bi)
 					fy.write("%f\n"%bj)
@@ -161,8 +162,8 @@ def storedata():
 					d1 = (b1i & 0x20) >> 5
 					d2 = (b3i & 0x20) >> 5
 
-					bi = (((b1i & 0x1F) << 7) + (b2i & 0x7F))/819
-					bj = (((b3i & 0x1F) << 7) + (b4i & 0x7F))/819
+					bi = (((b1i & 0x1F) << 7) + (b2i & 0x7F))#/819
+					bj = (((b3i & 0x1F) << 7) + (b4i & 0x7F))#/819
 
 					fx.write("%f\n"%bi)
 					fy.write("%f\n"%bj)
@@ -171,12 +172,13 @@ def storedata():
 					fd2.write("%d\n"%d2)
 
 					fe.write("Error en la posicion %d"%i)
+					ser.reset_input_buffer()
 
 		ser.close()
 		os.system('clear')
 
 def plotsignal():
-	t = np.linspace(0.0, 0.999, 1000)
+	t = np.linspace(0.0, 299.999, 300000)
 	x = pd.read_csv('anag1.csv', header=None, squeeze = True).values
 	y = pd.read_csv('anag2.csv', header=None, squeeze = True).values
 	d1 = pd.read_csv('dig1.csv', header=None, squeeze = True).values
@@ -221,4 +223,108 @@ def plothistogram():
 	print('\nCanal analogico 2:')
 	print(y.describe())
 
-# Punto blanco -> Cable negro
+def activar_envio(dpar):
+	dpar_dict = {'Galv+Sharp': b'\x02', 'Pasos+Sharp': b'\x22', 'Galv+Cnt': b'\x12'}
+	# configure the serial connections (the parameters differs on the device you are connecting to)
+	ser = serial.Serial(
+	    port='/dev/ttyUSB0', #'/dev/ttyACM0',
+	    baudrate=115200,
+	    parity=serial.PARITY_NONE,
+	    stopbits=serial.STOPBITS_ONE,
+	    bytesize=serial.EIGHTBITS
+	)
+	global stopsignal
+	try:
+		if ser.isOpen():
+			ser.close()	
+		ser.open()
+	except Exception:
+		print("Error abriendo el puerto.")
+		exit()
+
+	if ser.isOpen():
+		
+		ser.write(dpar_dict[dpar])
+		
+		ser.close()
+		os.system('clear')
+
+
+def alejar():
+	# configure the serial connections (the parameters differs on the device you are connecting to)
+	ser = serial.Serial(
+	    port='/dev/ttyUSB0',#'/dev/ttyACM0',
+	    baudrate=115200,
+	    parity=serial.PARITY_NONE,
+	    stopbits=serial.STOPBITS_ONE,
+	    bytesize=serial.EIGHTBITS
+	)
+	global stopsignal
+	try:
+		if ser.isOpen():
+			ser.close()	
+		ser.open()
+	except Exception:
+		print("Error abriendo el puerto.")
+		exit()
+
+	if ser.isOpen():
+		
+		ser.write(b'\x03')
+		
+		ser.close()
+		os.system('clear')
+
+def acercar():
+	# configure the serial connections (the parameters differs on the device you are connecting to)
+	ser = serial.Serial(
+	    port='/dev/ttyUSB0',#'/dev/ttyACM0',
+	    baudrate=115200,
+	    parity=serial.PARITY_NONE,
+	    stopbits=serial.STOPBITS_ONE,
+	    bytesize=serial.EIGHTBITS
+	)
+	global stopsignal
+	try:
+		if ser.isOpen():
+			ser.close()	
+		ser.open()
+	except Exception:
+		print("Error abriendo el puerto.")
+		exit()
+
+	if ser.isOpen():
+		
+		ser.write(b'\x13')
+		
+		ser.close()
+		os.system('clear')
+
+def move_noria(obsid):
+	#obsid_dict = {'0': b'\x04', '1': b'\x14', '2': b'\x24', '3': b'\x34', '4': b'\x44', '5': b'\x54',
+	#		 '6': b'\x64', '7': b'\x74', '8': b'\x84', '9': b'\x94', 'a': b'\xa4', 'b': b'\xb4',
+	#		 'c': b'\xc4', 'd': b'\xd4', 'e': b'\xe4', 'f': b'\xf4'}
+	obsid_arr = [b'\x04',b'\x14',b'\x24',b'\x34',b'\x44',b'\x54',b'\x64',b'\x74']
+	# configure the serial connections (the parameters differs on the device you are connecting to)
+	ser = serial.Serial(
+	    port='/dev/ttyUSB0',#'/dev/ttyACM0',
+	    baudrate=115200,
+	    parity=serial.PARITY_NONE,
+	    stopbits=serial.STOPBITS_ONE,
+	    bytesize=serial.EIGHTBITS
+	)
+	global stopsignal
+	try:
+		if ser.isOpen():
+			ser.close()	
+		ser.open()
+	except Exception:
+		print("Error abriendo el puerto.")
+		exit()
+
+	if ser.isOpen():
+		
+		ser.write(obsid_arr[obsid])
+		
+		ser.close()
+		os.system('clear')
